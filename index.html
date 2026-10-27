@@ -9,7 +9,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-180.png">
-<title>RALLY 11 — FLICK ARENA</title>
+<title>RALLY 11 — POWER SWING</title>
 <style>
 :root {color-scheme:dark; --ink:#eefaff;--muted:#7f9aaa;--teal:#35e0ca;--coral:#ff806f;--gold:#ffda86;--bg:#071321;--line:rgba(134,181,207,.17);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
 * {box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -108,14 +108,14 @@ body{background:linear-gradient(165deg,#ffffff 0%,#eef7fe 57%,#e8f2f9 100%)}
 </head>
 <body>
 <main class="app" id="app">
-  <header class="topbar"><div class="logo">RALLY<b>11</b><span>DISTANCE RALLY · V5</span></div><div class="iconBtns"><button type="button" class="iconBtn" id="soundBtn" aria-label="音のオンオフ">♪</button><button type="button" class="iconBtn" id="pauseBtn" aria-label="一時停止">Ⅱ</button></div></header>
+  <header class="topbar"><div class="logo">RALLY<b>11</b><span>POWER SWING · V6</span></div><div class="iconBtns"><button type="button" class="iconBtn" id="soundBtn" aria-label="音のオンオフ">♪</button><button type="button" class="iconBtn" id="pauseBtn" aria-label="一時停止">Ⅱ</button></div></header>
   <section class="scorebar" aria-label="スコア"><div class="scoreCard you"><div><div class="playerName">YOU</div><div class="setDots" id="yourSets"><i></i><i></i></div></div><div class="points" id="yourScore">0</div></div><div class="middleScore"><strong id="gameNum">GAME 1</strong><small id="serveLabel">11 POINTS</small></div><div class="scoreCard cpu"><div class="points" id="cpuScore">0</div><div><div class="playerName">CPU</div><div class="setDots" id="cpuSets"><i></i><i></i></div></div></div></section>
   <section class="stage" aria-label="卓球コート"><canvas id="court"></canvas><div class="stageTop"><div class="modePill" id="difficultyPill">LEVEL / NORMAL</div><div class="rallyPill">RALLY <b id="rallyCount">0</b></div></div><div class="banner hidden" id="banner"></div><div class="hint" id="hint">指でラケットを動かしてボールを打ち返そう</div></section>
   <div class="motionBar" aria-live="polite">
-    <div class="motionGuide"><span class="motionGlyph">↕</span><div><strong>指で直接スイング</strong><small>左右：コース　上下：前後移動＆回転</small></div></div>
+    <div class="motionGuide"><span class="motionGlyph">↕</span><div><strong>指で直接スイング</strong><small>上へ素早く振る＝強打 ／ 下へ引く＝後退</small></div></div>
     <div class="motionResult"><span class="motionState" id="spinLabel">フラット</span><strong id="spinPower">—</strong><small id="depthLabel" style="color:#67879b;font-size:9px;white-space:nowrap">台の近く</small></div>
   </div>
-  <div class="footer">下へドラッグして後退 ／ フリックでコースと回転 ／ カメラ自動追尾</div>
+  <div class="footer">前に速く振るほど高速ショット ／ 後退ラリー＆カメラ自動追尾</div>
   <div class="overlay" id="overlay" role="dialog" aria-modal="true"><div class="modal" id="modal"></div></div>
 </main>
 <script>
@@ -128,7 +128,7 @@ const levels={easy:{name:'EASY',cpuSpeed:1.55,accuracy:.43,returnDur:1.00,reach:
 let difficulty='normal',settings=levels.normal,W=390,H=530,dpr=1,gameState='menu',wasPaused='ready',points={you:0,cpu:0},sets={you:0,cpu:0},gameIndex=1,serve='you',rally=0,best=0,totalHits=0,aiAngle=18,muted=false,audio=null,shot=null,ball={x:0,z:.9,y:.18},trail=[],particles=[],aiX=0,playerX=0,targetPlayerX=0,playerY=.18,targetPlayerY=.18,playerZ=1.07,targetPlayerZ=1.07,aiZ=-1.07,dragStartY=0,dragStartZ=1.07,playerVel=0,strokeX=0,strokeY=0,lastStroke=0,spinReadout=0,pointerDown=false,pointerId=null,keyDir=0,keyVert=0,pointTime=0,pointMessage='',pointSub='',elapsed=0,aiServeTimer=0,last=0,glowPulse=0,flyaway=null,followCam={x:0,y:0,zoom:1},gestureSamples=[],flickVector=null;
 // ラケットの実際の移動速度を衝突時にサンプリングする。
 function swingSpin(vx,vy){return {top:clamp(vy*.31,-1,1),side:clamp(vx*.19,-.86,.86),power:clamp(Math.hypot(vx*.16,vy*.19),0,1)};}
-// 最新130msの指の移動からフリック方向を求め、打球時まで短時間保持する。
+// 最新130msのフリックを記録。前（画面上方向）への速いスイングは球速へ強く反映する。
 function recordFlick(e){
  const now=performance.now(),r=cvs.getBoundingClientRect();
  gestureSamples.push({x:e.clientX-r.left,y:e.clientY-r.top,t:now});
@@ -139,10 +139,13 @@ function recordFlick(e){
  const vx=(last.x-first.x)/dt,vy=(last.y-first.y)/dt;
  if(Math.hypot(vx,vy)<135||Math.hypot(last.x-first.x,last.y-first.y)<9)return;
  const side=clamp(vx/(W*1.35),-1,1),depth=clamp(-vy/(H*1.10),-1,1);
- flickVector={side,depth,power:clamp(Math.hypot(side,depth),.12,1),at:now};
+ // すばやく『前へ』振るほど強打。左右・後ろへのフリックではブーストしない。
+ // 速度は画面高さを基準に正規化し、大小のiPhoneで操作感を揃える。
+ const forwardPower=clamp((Math.max(0,-vy)-H*.22)/(H*1.6),0,1);
+ flickVector={side,depth,power:clamp(Math.hypot(side,depth),.12,1),forwardPower,at:now};
 }
 function recentFlick(){return flickVector&&performance.now()-flickVector.at<850?flickVector:null;}
-function updateSpinReadout(top=0,side=0){const strength=Math.max(Math.abs(top),Math.abs(side));$('spinLabel').textContent=strength<.14?'フラット':Math.abs(side)>Math.abs(top)*1.25?'横回転':top>0?'トップスピン':'バックスピン';$('spinPower').textContent=strength<.14?'—':`${Math.round(strength*100)}%`;}
+function updateSpinReadout(top=0,side=0,speedRatio=1){const strength=Math.max(Math.abs(top),Math.abs(side));$('spinLabel').textContent=strength<.14?'フラット':Math.abs(side)>Math.abs(top)*1.25?'横回転':top>0?'トップスピン':'バックスピン';$('spinPower').textContent=speedRatio>=1.17?`⚡ POWER ×${speedRatio.toFixed(1)}`:strength<.14?'—':`${Math.round(strength*100)}%`;}
 
 try{best=Number(localStorage.getItem('rally11_best')||0)}catch{}
 function sound(freq=300,dur=.05,type='sine',gain=.07){if(muted)return;try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audio=audio||new C();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(50,freq*.62),audio.currentTime+dur);g.gain.setValueAtTime(gain,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch{}}
@@ -176,17 +179,20 @@ const scoreText=()=>{scoreYou.textContent=points.you;scoreCpu.textContent=points
 function getServer(){const total=points.you+points.cpu;const change=points.you>=10&&points.cpu>=10?total-20+10:Math.floor(total/2);return (Math.max(0,change)+gameIndex-1)%2===0?'you':'cpu'}
 function showBanner(t,sub=''){banner.innerHTML='';banner.textContent=t;if(sub){const s=document.createElement('small');s.textContent=sub;banner.append(s)}banner.classList.remove('hidden')}
 function hideBanner(){banner.classList.add('hidden')}
-function showMenu(title='READY TO RALLY',ended=false){gameState=ended?'gameover':'menu';overlay.hidden=false;$('pauseBtn').textContent='Ⅱ';const text=ended?'もう一度、卓球勝負をしよう。':'台の後ろまで下がって打ち返す、ダイナミックな遠距離ラリー！';modal.innerHTML=`<div class="trophy">🏓</div><div class="eyebrow">TABLE TENNIS CHALLENGE</div><h1>${ended?(sets.you>sets.cpu?'YOU <em>WIN!</em>':'TRY <em>AGAIN!</em>'):'RALLY <em>11</em>'}</h1><p>${text}</p>${ended?`<div class="resultStats"><div><strong>${sets.you} - ${sets.cpu}</strong><small>獲得ゲーム</small></div><div><strong>${best}</strong><small>ベストラリー</small></div></div>`:''}<div class="rules"><div class="rule"><strong>↕ 前後に動く</strong>下へドラッグ＝台から下がる ／ 上＝台へ近づく</div><div class="rule"><strong>⚡ 上へフリック</strong>奥へ伸びるトップスピン</div><div class="rule"><strong>🌀 下へフリック</strong>下回転で短くコントロール</div><div class="rule"><strong>↔ 横へフリック</strong>左右の打球コースと横回転</div></div><div class="eyebrow" style="text-align:left;color:#abc5d5;letter-spacing:.09em">CPUの強さ</div><div class="segment"><button class="diff ${difficulty==='easy'?'active':''}" data-diff="easy">やさしい</button><button class="diff ${difficulty==='normal'?'active':''}" data-diff="normal">ふつう</button><button class="diff ${difficulty==='hard'?'active':''}" data-diff="hard">プロ</button></div><button class="primary" id="startMatch">${ended?'もう一度対戦':'試合をはじめる'}　→</button><p style="font-size:10px;margin:12px 0 0">11点先取（2点差）・3ゲームマッチ</p>`;
+function showMenu(title='READY TO RALLY',ended=false){gameState=ended?'gameover':'menu';overlay.hidden=false;$('pauseBtn').textContent='Ⅱ';const text=ended?'もう一度、卓球勝負をしよう。':'前へ速く振るほど強い球！ 後ろに下がって豪快なラリーも楽しもう！';modal.innerHTML=`<div class="trophy">🏓</div><div class="eyebrow">TABLE TENNIS CHALLENGE</div><h1>${ended?(sets.you>sets.cpu?'YOU <em>WIN!</em>':'TRY <em>AGAIN!</em>'):'RALLY <em>11</em>'}</h1><p>${text}</p>${ended?`<div class="resultStats"><div><strong>${sets.you} - ${sets.cpu}</strong><small>獲得ゲーム</small></div><div><strong>${best}</strong><small>ベストラリー</small></div></div>`:''}<div class="rules"><div class="rule"><strong>↕ 前後に動く</strong>下へドラッグ＝台から下がる ／ 上＝台へ近づく</div><div class="rule"><strong>⚡ 前へ強く振る</strong>上へ速くスワイプすると球速がアップ</div><div class="rule"><strong>🌀 下へフリック</strong>下回転で短くコントロール</div><div class="rule"><strong>↔ 横へフリック</strong>左右の打球コースと横回転</div></div><div class="eyebrow" style="text-align:left;color:#abc5d5;letter-spacing:.09em">CPUの強さ</div><div class="segment"><button class="diff ${difficulty==='easy'?'active':''}" data-diff="easy">やさしい</button><button class="diff ${difficulty==='normal'?'active':''}" data-diff="normal">ふつう</button><button class="diff ${difficulty==='hard'?'active':''}" data-diff="hard">プロ</button></div><button class="primary" id="startMatch">${ended?'もう一度対戦':'試合をはじめる'}　→</button><p style="font-size:10px;margin:12px 0 0">11点先取（2点差）・3ゲームマッチ</p>`;
 modal.querySelectorAll('[data-diff]').forEach(b=>b.addEventListener('click',()=>{difficulty=b.dataset.diff;settings=levels[difficulty];modal.querySelectorAll('.diff').forEach(x=>x.classList.toggle('active',x===b))}));$('startMatch').addEventListener('click',startMatch);$('difficultyPill').textContent='LEVEL / '+settings.name;}
 function startMatch(){points={you:0,cpu:0};sets={you:0,cpu:0};gameIndex=1;totalHits=0;playerX=0;targetPlayerX=0;playerY=.18;targetPlayerY=.18;playerZ=1.07;targetPlayerZ=1.07;aiZ=-1.07;strokeX=0;strokeY=0;aiX=0;shot=null;flyaway=null;trail=[];followCam={x:0,y:0,zoom:1};flickVector=null;gestureSamples=[];updateSpinReadout();overlay.hidden=true;settings=levels[difficulty];$('difficultyPill').textContent='LEVEL / '+settings.name;setupServe();sound(720,.08,'triangle')}
-function setupServe(){rally=0;serve=getServer();shot=null;flyaway=null;trail.length=0;ball={x:serve==='you'?playerX:aiX,z:serve==='you'?playerZ:aiZ,y:.24};gameState='ready';aiServeTimer=0;scoreText();if(serve==='you'){showBanner('YOUR SERVE','タップまたはフリックでサーブ');hint.textContent='下へドラッグ＝後ろに下がる ／ フリック＝打球の方向と回転'}else{showBanner('CPU SERVE','ボールの落下点にラケットを合わせよう');hint.textContent='球が奥に来たら、下へドラッグして台から下がろう！'} }
-// 球がラケットに当たった瞬間の移動方向と速度で回転が決まる。
-// ラケットが台から何歩も離れて打てる。長いショットほど CPU も後退する。
+function setupServe(){rally=0;serve=getServer();shot=null;flyaway=null;trail.length=0;ball={x:serve==='you'?playerX:aiX,z:serve==='you'?playerZ:aiZ,y:.24};gameState='ready';aiServeTimer=0;scoreText();if(serve==='you'){showBanner('YOUR SERVE','タップまたはフリックでサーブ');hint.textContent='上へ素早く振ると強打！ 下へ引くと後退'}else{showBanner('CPU SERVE','ボールの落下点にラケットを合わせよう');hint.textContent='球が奥に来たら、下へドラッグして台から下がろう！'} }
+// 球がラケットに当たった瞬間のフリックでコース・回転・球速を決める。
+// 台へ向けて速く振れば、スイング速度に応じて打球時間が短縮され強打になる。
+// ラケットが台から何歩も離れて打てる。長いショットほどCPUも後退する。
 function launch(from,startX,style='drive'){
  const to=from==='you'?'cpu':'you',flick=from==='you'?recentFlick():null;
  const motion=swingSpin(strokeX,strokeY);
  const spin=from==='you'?(flick?{top:clamp(flick.depth*.84+motion.top*.16,-1,1),side:clamp(flick.side*.88+motion.side*.12,-1,1),power:flick.power}:motion):{top:(style==='cut'?-.42:.43)+rand(-.16,.16),side:rand(-.35,.35),power:.46};
  const top=clamp(spin.top,-1,1),side=clamp(spin.side,-1,1),strength=spin.power;
+ // 前へのスイングを球速の主因にする。素振りが遅い時は従来に近いラリー速度。
+ const forwardBoost=from==='you'?(flick?flick.forwardPower:clamp(Math.max(0,strokeY)*.12,0,.18)):0;
  if(from==='cpu')aiAngle=top*28;
  const fromZ=from==='you'?playerZ:aiZ;
  let landing,toZ;
@@ -194,7 +200,7 @@ function launch(from,startX,style='drive'){
    landing=flick?clamp(flick.side*.91-aiX*.09+rand(-.035,.035),-1.08,1.08):clamp(-aiX*.38+side*.28+rand(-.07,.07),-.88,.88);
    const depth=flick?flick.depth:clamp(strokeY*.18,-1,1);
    // 正面へ強くフリックすると相手の後陣まで届く球になる。
-   toZ=-clamp(1.05+depth*.47+strength*.33+.17*Math.max(0,playerZ-1.1),.90,2.16);
+   toZ=-clamp(1.05+depth*.47+strength*.33+forwardBoost*.22+.17*Math.max(0,playerZ-1.1),.90,2.34);
  }else{
    let sideAim=Math.random()<.5?-1:1;
    if(Math.random()<.65)sideAim=playerX>.18?-1:playerX<-.18?1:sideAim;
@@ -205,16 +211,20 @@ function launch(from,startX,style='drive'){
  }
  const travel=Math.abs(toZ-fromZ);
  // 深いラリーでも時間をかけ過ぎず、高速ショットは明確に速くする。
- const dur=Math.max(.57,(from==='you'?.69:settings.returnDur)*(1-top*.11-strength*.10)+Math.max(0,travel-2.1)*.19-Math.min(rally,16)*.004);
+ const normalDur=Math.max(.58,(from==='you'?.72:settings.returnDur)*(1-top*.08-strength*.07)+Math.max(0,travel-2.1)*.17-Math.min(rally,16)*.003);
+ // 速く前へ振ると球速最大約2倍。移動距離ではなく飛行時間を短くして速度を変える。
+ const dur=from==='you'?Math.max(.35,normalDur/(1+forwardBoost*1.02)):normalDur;
+ const speedRatio=from==='you'?normalDur/dur:1;
  const bounceAt=from==='you'?-0.47:0.47;
  const bounceT=clamp((bounceAt-fromZ)/(toZ-fromZ),.46,.83);
- shot={from,to,startX,landing,t:0,dur,top,side,spinValue:top,curve:side*.14,bounceT,bounced:false,fromZ,toZ};
+ shot={from,to,startX,landing,t:0,dur,top,side,spinValue:top,curve:side*.14,bounceT,bounced:false,fromZ,toZ,forwardBoost,speedRatio};
  if(from==='you')flickVector=null;
  hideBanner();gameState='rally';rally++;totalHits++;scoreText();
- woodKnock('racket',from==='you'?1.05:.93);
+ woodKnock('racket',from==='you'?1.00+forwardBoost*.32:.93);
+ if(from==='you'&&forwardBoost>.52)makeBurst(ball,'#f2a12d',9);
  if(from==='you'){
-   updateSpinReadout(top,side);spinReadout=1.25;
-   hint.textContent=toZ < -1.52?'強い深いボール！相手も後ろへ下がる！':top>.17?'トップスピンで前へ伸びる！':top<-.17?'バックスピンで返球！':'フリック方向へ打球！';
+   updateSpinReadout(top,side,speedRatio);spinReadout=1.25;
+   hint.textContent=forwardBoost>.55?`⚡ パワーショット！ 球速 ×${speedRatio.toFixed(1)}`:forwardBoost>.18?'前へのスイングで打球が加速！':toZ < -1.52?'強い深いボール！相手も後ろへ下がる！':top>.17?'トップスピンで前へ伸びる！':top<-.17?'バックスピンで返球！':'フリック方向へ打球！';
  }else hint.textContent=toZ>1.53?'深い返球！下へドラッグして後ろに下がろう！':'球に合わせてラケットを動かそう！';
 }
 function ballPos(s){
@@ -381,7 +391,8 @@ function drawBall(){
  const p=project(ball.x,ball.z,ball.y),shadow=project(ball.x,ball.z,0),r=6*p.scale;
  ctx.fillStyle='#163e6742';ctx.beginPath();ctx.ellipse(shadow.x,shadow.y+2,r*1.45,r*.40,0,0,TAU);ctx.fill();
  const sv=shot?shot.top:(flyaway?clamp(strokeY*.31,-1,1):0);
- for(let i=trail.length-1;i>=0;i--){const t=trail[i],c=project(t.x,t.z,t.y),k=clamp(t.life/.15,0,1);ctx.beginPath();ctx.arc(c.x,c.y,Math.max(1,r*k*.86),0,TAU);ctx.fillStyle=sv>=0?`rgba(5,157,200,${.30*k})`:`rgba(246,115,62,${.30*k})`;ctx.fill()}
+ const rush=shot?.from==='you'?(shot.forwardBoost||0):0;
+ for(let i=trail.length-1;i>=0;i--){const t=trail[i],c=project(t.x,t.z,t.y),k=clamp(t.life/.15,0,1);ctx.beginPath();ctx.arc(c.x,c.y,Math.max(1,r*k*.86),0,TAU);ctx.fillStyle=rush>.45?`rgba(245,148,24,${(.28+.27*rush)*k})`:sv>=0?`rgba(5,157,200,${.30*k})`:`rgba(246,115,62,${.30*k})`;ctx.fill()}
  const aura=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*3.8);aura.addColorStop(0,'#ffe6a677');aura.addColorStop(1,'#ffe6a600');ctx.fillStyle=aura;ctx.beginPath();ctx.arc(p.x,p.y,r*3.8,0,TAU);ctx.fill();
  const g=ctx.createRadialGradient(p.x-r*.25,p.y-r*.35,0,p.x,p.y,r);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#fff7e8');g.addColorStop(1,'#ffb84c');ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fill();ctx.lineWidth=1.3;ctx.strokeStyle='#b75b2380';ctx.stroke();
  // ボール表面の回転マーク：回転方向と速度を視覚化する。
