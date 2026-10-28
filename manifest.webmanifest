@@ -1,7 +1,7 @@
 {
-  "name": "RALLY 11 - POWER SWING 卓球",
+  "name": "RALLY 11 - STYLE SHOCK 卓球",
   "short_name": "RALLY 11",
-  "description": "フリック方向に打ち返す、木製ラケット風の打球音、ワイドな低角度コートの卓球ゲーム",
+  "description": "奥行きあるコート・後陣カメラ・カットマンの下回転・ドライブマンの強打・強打音。iPhone対応卓球ゲーム。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
