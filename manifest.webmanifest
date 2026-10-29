@@ -1,8 +1,8 @@
 {
-  "name": "RALLY 11 - CLEAR SHOTS v15",
+  "name": "RALLY 11 - PRO CHAMPIONSHIP v18",
   "short_name": "RALLY 11",
-  "description": "オーバーミス理由の表示、低い弧線、カットへの統合、弱い返球からチャンスボールを再現。",
-  "start_url": "./index.html",
+  "description": "32名プロトーナメントを追加。1セット11点制のプロ大会はCPUの球速・回転・鋭いコースが強化。通常大会も遊べます。",
+  "start_url": "./index.html?v=18",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
