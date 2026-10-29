@@ -1,8 +1,8 @@
 {
-  "name": "RALLY 11 - PRO CHAMPIONSHIP v18",
+  "name": "RALLY 11 - MATCH OPTIONS v23",
   "short_name": "RALLY 11",
-  "description": "32名プロトーナメントを追加。1セット11点制のプロ大会はCPUの球速・回転・鋭いコースが強化。通常大会も遊べます。",
-  "start_url": "./index.html?v=18",
+  "description": "サイド・ラケットアシスト・オーバーミスアシストをタイトル画面からON/OFFできる卓球ゲーム。",
+  "start_url": "./index.html?v=23",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
