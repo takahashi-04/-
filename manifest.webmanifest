@@ -1,8 +1,8 @@
 {
-  "name": "RALLY 11 - MATCH OPTIONS v23",
+  "name": "RALLY 11 - RALLY PRESSURE v25",
   "short_name": "RALLY 11",
-  "description": "サイド・ラケットアシスト・オーバーミスアシストをタイトル画面からON/OFFできる卓球ゲーム。",
-  "start_url": "./index.html?v=23",
+  "description": "イージー・ノーマル・ハードと、スタンダード大会・プロ大会を選べる卓球ゲーム。プロ大会では20打時点のCPU基本ミス率を10%に設定。",
+  "start_url": "./index.html?v=25",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
