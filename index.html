@@ -9,7 +9,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-180.png">
-<title>RALLY 11 — STYLE SHOCK</title>
+<title>RALLY 11 — CLEAR SHOTS</title>
 <style>
 :root {color-scheme:dark; --ink:#eefaff;--muted:#7f9aaa;--teal:#35e0ca;--coral:#ff806f;--gold:#ffda86;--bg:#071321;--line:rgba(134,181,207,.17);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
 * {box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -105,18 +105,24 @@ body{background:linear-gradient(165deg,#ffffff 0%,#eef7fe 57%,#e8f2f9 100%)}
 .motionState{font-size:11px;color:#078ba7;font-weight:900;white-space:nowrap}.motionResult strong{font-size:12px;color:#c66e23;white-space:nowrap}
 @media(max-width:350px){.motionGuide small{font-size:9px}.motionBar{padding:7px 9px;min-height:50px}.motionResult{min-width:65px}}
 @media(max-height:710px){.app{gap:5px}.motionBar{padding:6px 10px;min-height:48px}.stage{min-height:190px}}
+/* v14: 強打・変化球の色と利き手を常時把握できる小さな凡例 */
+.trailLegend{position:absolute;top:49px;left:12px;display:flex;flex-wrap:wrap;gap:7px;pointer-events:none;z-index:2}
+.trailLegend span{display:flex;align-items:center;gap:4px;font-size:9px;font-weight:850;color:#28506e;padding:5px 7px;background:#ffffffdf;border:1px solid #e0edf6;border-radius:20px}
+.trailLegend i{display:inline-block;width:15px;height:4px;border-radius:5px;box-shadow:0 0 6px #ffffff}
+.trailLegend .blueLine{background:#188cff}.trailLegend .redLine{background:#ee4b56}
+@media(max-width:350px){.trailLegend{top:44px;gap:3px}.trailLegend span{font-size:8px;padding:4px 5px}}
 </style>
 </head>
 <body>
 <main class="app" id="app">
-  <header class="topbar"><div class="logo">RALLY<b>11</b><span>REAL RALLY · V11</span></div><div class="iconBtns"><button type="button" class="iconBtn" id="soundBtn" aria-label="音のオンオフ">♪</button><button type="button" class="iconBtn" id="pauseBtn" aria-label="一時停止">Ⅱ</button></div></header>
+  <header class="topbar"><div class="logo">RALLY<b>11</b><span>CLEAR SHOTS · V15</span></div><div class="iconBtns"><button type="button" class="iconBtn" id="soundBtn" aria-label="音のオンオフ">♪</button><button type="button" class="iconBtn" id="pauseBtn" aria-label="一時停止">Ⅱ</button></div></header>
   <section class="scorebar" aria-label="スコア"><div class="scoreCard you"><div><div class="playerName">YOU</div><div class="setDots" id="yourSets"><i></i><i></i></div></div><div class="points" id="yourScore">0</div></div><div class="middleScore"><strong id="gameNum">GAME 1</strong><small id="serveLabel">11 POINTS</small></div><div class="scoreCard cpu"><div class="points" id="cpuScore">0</div><div><div class="playerName">CPU</div><div class="setDots" id="cpuSets"><i></i><i></i></div></div></div></section>
-  <section class="stage" aria-label="卓球コート"><canvas id="court"></canvas><div class="stageTop"><div class="modePill" id="difficultyPill">LEVEL / NORMAL</div><div class="rallyPill">RALLY <b id="rallyCount">0</b></div></div><div class="banner hidden" id="banner"></div><div class="hint" id="hint">指でラケットを動かしてボールを打ち返そう</div></section>
+  <section class="stage" aria-label="卓球コート"><canvas id="court"></canvas><div class="stageTop"><div class="modePill" id="difficultyPill">LEVEL / NORMAL</div><div class="rallyPill">RALLY <b id="rallyCount">0</b></div></div><div class="banner hidden" id="banner"></div><div class="trailLegend"><span><i class="blueLine"></i>ドライブ・スマッシュ</span><span><i class="redLine"></i>カット</span></div><div class="hint" id="hint">指でラケットを動かしてボールを打ち返そう</div></section>
   <div class="motionBar" aria-live="polite">
-    <div class="motionGuide"><span class="motionGlyph">↕</span><div><strong>指で直接スイング</strong><small>上へ素早く＝ドライブ ／ 下へこする＝ツッツキ</small></div></div>
+    <div class="motionGuide"><span class="motionGlyph">↕</span><div><strong>指で直接スイング</strong><small>上へ素早く＝ドライブ ／ 下へこする＝カット</small></div></div>
     <div class="motionResult"><span class="motionState" id="spinLabel">フラット</span><strong id="spinPower">—</strong><small id="depthLabel" style="color:#67879b;font-size:9px;white-space:nowrap">台の近く</small></div>
   </div>
-  <div class="footer">REAL RALLY v11 ・ ワイドコート ／ ツッツキ・ドライブ ／ 多彩なラリー</div>
+  <div class="footer">CLEAR SHOTS v15 ・ ミス理由 ／ カット統合 ／ チャンスボール</div>
   <div class="overlay" id="overlay" role="dialog" aria-modal="true"><div class="modal" id="modal"></div></div>
 </main>
 <script>
@@ -126,7 +132,7 @@ const $=id=>document.getElementById(id), cvs=$('court'), ctx=cvs.getContext('2d'
 const scoreYou=$('yourScore'),scoreCpu=$('cpuScore'),gameNum=$('gameNum'),serveLabel=$('serveLabel'),banner=$('banner'),hint=$('hint');
 const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,rand=(a,b)=>a+Math.random()*(b-a);
 const levels={easy:{name:'EASY',cpuSpeed:2.75,accuracy:.18,returnDur:.94,reach:1.05,aim:.40},normal:{name:'NORMAL',cpuSpeed:3.15,accuracy:.12,returnDur:.83,reach:1.03,aim:.55},hard:{name:'PRO',cpuSpeed:3.5,accuracy:.07,returnDur:.72,reach:.96,aim:.68}};
-let cpuStyle='drive',difficulty='normal',settings=levels.normal,W=390,H=530,dpr=1,gameState='menu',wasPaused='ready',points={you:0,cpu:0},sets={you:0,cpu:0},gameIndex=1,serve='you',rally=0,best=0,totalHits=0,aiAngle=18,muted=false,audio=null,shot=null,ball={x:0,z:.9,y:.18},trail=[],particles=[],aiX=0,playerX=0,targetPlayerX=0,playerY=.18,targetPlayerY=.18,playerZ=.95,targetPlayerZ=.95,aiZ=-1.07,dragStartY=0,dragStartZ=.95,playerVel=0,strokeX=0,strokeY=0,lastStroke=0,spinReadout=0,pointerDown=false,pointerId=null,keyDir=0,keyVert=0,pointTime=0,pointMessage='',pointSub='',elapsed=0,aiServeTimer=0,last=0,glowPulse=0,flyaway=null,followCam={x:0,y:0,zoom:1},gestureSamples=[],flickVector=null,bounceCue=null,lastShotKind="フラット",pointHistory=[];
+let playerHand='right',strokeSide='fore',cpuStyle='drive',difficulty='normal',settings=levels.normal,W=390,H=530,dpr=1,gameState='menu',wasPaused='ready',points={you:0,cpu:0},sets={you:0,cpu:0},gameIndex=1,serve='you',rally=0,best=0,totalHits=0,aiAngle=18,muted=false,audio=null,shot=null,ball={x:0,z:.9,y:.18},trail=[],particles=[],aiX=0,playerX=0,targetPlayerX=0,playerY=.18,targetPlayerY=.18,playerZ=.95,targetPlayerZ=.95,aiZ=-1.07,dragStartY=0,dragStartZ=.95,playerVel=0,strokeX=0,strokeY=0,lastStroke=0,spinReadout=0,pointerDown=false,pointerId=null,keyDir=0,keyVert=0,pointTime=0,pointMessage='',pointSub='',elapsed=0,aiServeTimer=0,last=0,glowPulse=0,flyaway=null,followCam={x:0,y:0,zoom:1},gestureSamples=[],flickVector=null,bounceCue=null,lastShotKind="フラット",pointHistory=[],missCue=null;
 // 前に振った力と、ボールをこする動作は別の効果にする。
 // 画面上方向への素早い操作は「前進するスイング」とみなし、
 // ボールを不自然に打ち上げないようトップスピンは弱く制限する。
@@ -153,8 +159,20 @@ function recordFlick(e){
 }
 // スイングは打球前の短い時間だけ有効。古いフリックが次の球に反映されないようにする。
 function recentFlick(){return flickVector && performance.now()-flickVector.at<260?flickVector:null;}
-function updateSpinReadout(top=0,side=0,speedRatio=1,kind='フラット'){const strength=Math.max(Math.abs(top),Math.abs(side));$('spinLabel').textContent=kind==='ツッツキ'?'🛡 ツッツキ':kind==='カット'?'🛡 カット':kind==='スマッシュ'?'💥 スマッシュ':kind==='ドライブ'?'⚡ ドライブ':strength<.14?'フラット':Math.abs(side)>Math.abs(top)*1.25?'横回転':top>0?'トップスピン':'バックスピン';$('spinPower').textContent=speedRatio>=1.17?`球速 ×${speedRatio.toFixed(1)}`:strength<.14?'—':`${Math.round(strength*100)}%`;}
+function updateSpinReadout(top=0,side=0,speedRatio=1,kind='フラット'){const strength=Math.max(Math.abs(top),Math.abs(side));$('spinLabel').textContent=kind==='カット'?'🛡 カット':kind==='スマッシュ'?'💥 スマッシュ':kind==='ドライブ'?'⚡ ドライブ':strength<.14?'フラット':Math.abs(side)>Math.abs(top)*1.25?'横回転':top>0?'トップスピン':'バックスピン';$('spinPower').textContent=speedRatio>=1.17?`球速 ×${speedRatio.toFixed(1)}`:strength<.14?'—':`${Math.round(strength*100)}%`;}
 
+// 右利きでは画面右側がフォア、左利きでは画面左側がフォア。
+// 中央付近は直前のラケットの動きで打球面を判断する。
+function chooseStrokeSide(impactX){
+ const hand=playerHand==='right'?1:-1;
+ const side=Math.abs(impactX-playerX)>.13?(impactX-playerX):Math.abs(impactX)>.12?impactX:(Math.abs(strokeX)>.10?strokeX:hand);
+ return side*hand>=0?'fore':'back';
+}
+function shotTrailRGB(kind){
+ if(kind==='ドライブ'||kind==='スマッシュ')return '25,128,252';
+ if(kind==='カット')return '239,69,87';
+ return '96,122,145';
+}
 try{best=Number(localStorage.getItem('rally11_best')||0)}catch{}
 function sound(freq=300,dur=.05,type='sine',gain=.07){if(muted)return;try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audio=audio||new C();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(50,freq*.62),audio.currentTime+dur);g.gain.setValueAtTime(gain,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch{}}
 // 短い高域のアタック＋空洞の共鳴を重ねた、木製ラケット風の「カコン」。
@@ -207,101 +225,108 @@ const scoreText=()=>{scoreYou.textContent=points.you;scoreCpu.textContent=points
 function getServer(){const total=points.you+points.cpu;const change=points.you>=10&&points.cpu>=10?total-20+10:Math.floor(total/2);return (Math.max(0,change)+gameIndex-1)%2===0?'you':'cpu'}
 function showBanner(t,sub=''){banner.innerHTML='';banner.textContent=t;if(sub){const s=document.createElement('small');s.textContent=sub;banner.append(s)}banner.classList.remove('hidden')}
 function hideBanner(){banner.classList.add('hidden')}
-function showMenu(title='READY TO RALLY',ended=false){gameState=ended?'gameover':'menu';overlay.hidden=false;$('pauseBtn').textContent='Ⅱ';const text=ended?'もう一度、卓球勝負をしよう。':'遠近感のあるコートで対決！ ドライブマンは高速強打、カットマンは大きく浮かせた下回転。後陣ではカメラが引いてラリー全体を追いかけます。';modal.innerHTML=`<div class="trophy">🏓</div><div class="eyebrow">TABLE TENNIS CHALLENGE</div><h1>${ended?(sets.you>sets.cpu?'YOU <em>WIN!</em>':'TRY <em>AGAIN!</em>'):'RALLY <em>11</em>'}</h1><p>${text}</p>${ended?`<div class="resultStats"><div><strong>${sets.you} - ${sets.cpu}</strong><small>獲得ゲーム</small></div><div><strong>${best}</strong><small>ベストラリー</small></div></div>`:''}<div class="rules"><div class="rule"><strong>↕ 前後の位置取り</strong>下へドラッグ＝後退 ／ 上＝ネット近くまで前進</div><div class="rule"><strong>⚡ ドライブ</strong>球が来た瞬間に上へ速くフリックすると、前へ速く伸びる上回転</div><div class="rule"><strong>🛡 ツッツキ</strong>球が来た瞬間に下へ短くこすると、低速で短い下回転</div><div class="rule"><strong>↔ 左右に振る</strong>コース変更・横回転。フリックの方向でコースを打ち分ける</div></div><div class="eyebrow" style="text-align:left;color:#537e95;letter-spacing:.09em">相手のプレースタイル</div><div class="styleChoice"><button type="button" class="styleOption ${cpuStyle==='cut'?'active':''}" data-style="cut"><strong>🛡 カットマン</strong><small>ふわりと浮く強い下回転・粘る守備</small></button><button type="button" class="styleOption ${cpuStyle==='drive'?'active':''}" data-style="drive"><strong>⚡ ドライブマン</strong><small>速いドライブ・時々スマッシュ</small></button></div><div class="eyebrow" style="text-align:left;color:#abc5d5;letter-spacing:.09em">CPUの強さ</div><div class="segment"><button class="diff ${difficulty==='easy'?'active':''}" data-diff="easy">やさしい</button><button class="diff ${difficulty==='normal'?'active':''}" data-diff="normal">ふつう</button><button class="diff ${difficulty==='hard'?'active':''}" data-diff="hard">プロ</button></div><button class="primary" id="startMatch">${ended?'もう一度対戦':'試合をはじめる'}　→</button><p style="font-size:10px;margin:12px 0 0">11点先取（2点差）・3ゲームマッチ</p>`;
-modal.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>{cpuStyle=b.dataset.style;modal.querySelectorAll('.styleOption').forEach(x=>x.classList.toggle('active',x===b))}));modal.querySelectorAll('[data-diff]').forEach(b=>b.addEventListener('click',()=>{difficulty=b.dataset.diff;settings=levels[difficulty];modal.querySelectorAll('.diff').forEach(x=>x.classList.toggle('active',x===b))}));$('startMatch').addEventListener('click',startMatch);$('difficultyPill').textContent='CPU / '+(cpuStyle==='cut'?'カット':'ドライブ')+' · '+settings.name;}
-function startMatch(){points={you:0,cpu:0};sets={you:0,cpu:0};gameIndex=1;totalHits=0;playerX=0;targetPlayerX=0;playerY=.18;targetPlayerY=.18;playerZ=.95;targetPlayerZ=.95;aiZ=-1.07;strokeX=0;strokeY=0;aiX=0;shot=null;flyaway=null;trail=[];followCam={x:0,y:0,zoom:1};flickVector=null;gestureSamples=[];bounceCue=null;lastShotKind='フラット';pointHistory=[];updateSpinReadout();overlay.hidden=true;settings=levels[difficulty];$('difficultyPill').textContent='CPU / '+(cpuStyle==='cut'?'カット':'ドライブ')+' · '+settings.name;setupServe();sound(720,.08,'triangle')}
-function setupServe(){rally=0;serve=getServer();shot=null;flyaway=null;trail.length=0;ball={x:serve==='you'?playerX:aiX,z:serve==='you'?playerZ:aiZ,y:.24};gameState='ready';aiServeTimer=0;scoreText();if(serve==='you'){showBanner('YOUR SERVE','タップまたはフリックでサーブ');hint.textContent='上フリックでドライブ、下でツッツキ。強打はオーバーにも注意！'}else{showBanner('CPU SERVE','ボールの落下点にラケットを合わせよう');hint.textContent='オレンジの着地点を追いかけよう！ 自動補助あり'} }
+function showMenu(title='READY TO RALLY',ended=false){gameState=ended?'gameover':'menu';overlay.hidden=false;$('pauseBtn').textContent='Ⅱ';const text=ended?'もう一度、卓球勝負をしよう。':'青はドライブ・スマッシュ、赤はカット。弱い返球は浮いてチャンスボールに！ 打球が長すぎると台の奥にOUTの印が出ます。';modal.innerHTML=`<div class="trophy">🏓</div><div class="eyebrow">TABLE TENNIS CHALLENGE</div><h1>${ended?(sets.you>sets.cpu?'YOU <em>WIN!</em>':'TRY <em>AGAIN!</em>'):'RALLY <em>11</em>'}</h1><p>${text}</p>${ended?`<div class="resultStats"><div><strong>${sets.you} - ${sets.cpu}</strong><small>獲得ゲーム</small></div><div><strong>${best}</strong><small>ベストラリー</small></div></div>`:''}<div class="rules"><div class="rule"><strong>↕ 前後の位置取り</strong>下へドラッグ＝後退 ／ 上＝ネット近くまで前進</div><div class="rule"><strong>⚡ ドライブ</strong>球が来た瞬間に上へ速くフリックすると、前へ速く伸びる上回転</div><div class="rule"><strong>🛡 カット</strong>下へこすって下回転。弱く当てすぎると高く浮いてチャンスボール</div><div class="rule"><strong>↔ 左右に振る</strong>コース変更・横回転。フリックの方向でコースを打ち分ける</div></div><div class="eyebrow" style="text-align:left;color:#537e95;letter-spacing:.09em">相手のプレースタイル</div><div class="styleChoice"><button type="button" class="styleOption ${cpuStyle==='cut'?'active':''}" data-style="cut"><strong>🛡 カットマン</strong><small>ふわりと浮く強い下回転・粘る守備</small></button><button type="button" class="styleOption ${cpuStyle==='drive'?'active':''}" data-style="drive"><strong>⚡ ドライブマン</strong><small>速いドライブ・時々スマッシュ</small></button></div><div class="eyebrow" style="text-align:left;color:#537e95;letter-spacing:.09em">自分の利き手</div><div class="styleChoice"><button type="button" class="styleOption ${playerHand==='right'?'active':''}" data-hand="right"><strong>🏓 右利き</strong><small>右側がフォア</small></button><button type="button" class="styleOption ${playerHand==='left'?'active':''}" data-hand="left"><strong>🏓 左利き</strong><small>左側がフォア</small></button></div><div class="eyebrow" style="text-align:left;color:#abc5d5;letter-spacing:.09em">CPUの強さ</div><div class="segment"><button class="diff ${difficulty==='easy'?'active':''}" data-diff="easy">やさしい</button><button class="diff ${difficulty==='normal'?'active':''}" data-diff="normal">ふつう</button><button class="diff ${difficulty==='hard'?'active':''}" data-diff="hard">プロ</button></div><button class="primary" id="startMatch">${ended?'もう一度対戦':'試合をはじめる'}　→</button><p style="font-size:10px;margin:12px 0 0">11点先取（2点差）・3ゲームマッチ</p>`;
+modal.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>{cpuStyle=b.dataset.style;modal.querySelectorAll('.styleOption').forEach(x=>x.classList.toggle('active',x===b))}));modal.querySelectorAll('[data-hand]').forEach(b=>b.addEventListener('click',()=>{playerHand=b.dataset.hand;modal.querySelectorAll('.styleOption[data-hand]').forEach(x=>x.classList.toggle('active',x===b))}));modal.querySelectorAll('[data-diff]').forEach(b=>b.addEventListener('click',()=>{difficulty=b.dataset.diff;settings=levels[difficulty];modal.querySelectorAll('.diff').forEach(x=>x.classList.toggle('active',x===b))}));$('startMatch').addEventListener('click',startMatch);$('difficultyPill').textContent='CPU / '+(cpuStyle==='cut'?'カット':'ドライブ')+' · '+settings.name;}
+function startMatch(){points={you:0,cpu:0};sets={you:0,cpu:0};gameIndex=1;totalHits=0;playerX=0;targetPlayerX=0;playerY=.18;targetPlayerY=.18;playerZ=.95;targetPlayerZ=.95;aiZ=-1.07;strokeX=0;strokeY=0;aiX=0;shot=null;flyaway=null;trail=[];followCam={x:0,y:0,zoom:1};flickVector=null;gestureSamples=[];bounceCue=null;missCue=null;lastShotKind='フラット';strokeSide='fore';pointHistory=[];updateSpinReadout();overlay.hidden=true;settings=levels[difficulty];$('difficultyPill').textContent='CPU / '+(cpuStyle==='cut'?'カット':'ドライブ')+' · '+settings.name;setupServe();sound(720,.08,'triangle')}
+function setupServe(){rally=0;serve=getServer();shot=null;flyaway=null;trail.length=0;ball={x:serve==='you'?playerX:aiX,z:serve==='you'?playerZ:aiZ,y:.24};gameState='ready';aiServeTimer=0;scoreText();if(serve==='you'){showBanner('YOUR SERVE','タップまたはフリックでサーブ');hint.textContent='上フリックでドライブ、下でカット。打ちすぎると奥へオーバー！'}else{showBanner('CPU SERVE','ボールの落下点にラケットを合わせよう');hint.textContent='オレンジの着地点を追いかけよう！ 自動補助あり'} }
 // 球がラケットに当たった瞬間のフリックでコース・回転・球速を決める。
 // 台へ向けて速く振れば、スイング速度に応じて打球時間が短縮され強打になる。
 // ラケットが台から何歩も離れて打てる。長いショットほどCPUも後退する。
-function launch(from,startX,style='drive'){
+function launch(from,startX,style='drive',technique=null){
  const to=from==='you'?'cpu':'you';
+ const incoming=shot && shot.to===from ? shot : null;
+ const incomingChance=!!incoming?.chance;
+ const handShot=from==='you'?(technique||chooseStrokeSide(startX)):null;
  const flick=from==='you'?recentFlick():null;
  const motion=swingSpin(strokeX,strokeY);
  const forward=from==='you'?(flick?flick.forwardPower:clamp(Math.max(0,strokeY)*.07,0,.12)):0;
  const backSwipe=from==='you'?(flick?Math.max(0,-flick.top/.62):Math.max(0,-motion.top/.25)):0;
- // ツッツキは下への短いこすり、ドライブは前への速いスイングで自然に選択する。
- // 位置取り中のゆっくりしたドラッグはスイングとして扱わない。
  let kind;
- if(from==='you')kind=backSwipe>.30&&forward<.46?'ツッツキ':forward>.24?'ドライブ':'ブロック';
- else if(cpuStyle==='cut'){
-  const r=Math.random();kind=r<.77?'カット':r<.94?'ツッツキ':'ドライブ';
+ if(from==='you'){
+   kind=backSwipe>.30&&forward<.46?'カット':forward>.24?'ドライブ':'ブロック';
+   if(kind==='ドライブ' && (forward>.76 || (incomingChance && forward>.32)))kind='スマッシュ';
+ }else if(cpuStyle==='cut'){
+   if(incomingChance){kind=Math.random()<.28?'ドライブ':'カット';}
+   else kind=Math.random()<.85?'カット':'ドライブ';
  }else{
-  const r=Math.random();kind=r<.17?'スマッシュ':r<.92?'ドライブ':'ツッツキ';
+   if(incomingChance){kind=Math.random()<.64?'スマッシュ':'ドライブ';}
+   else{const r=Math.random();kind=r<.15?'スマッシュ':r<.94?'ドライブ':'カット';}
  }
- // プレイヤーも強く前へ振った時はスマッシュを放てる。
- if(from==='you'&&kind==='ドライブ'&&forward>.76)kind='スマッシュ';
- let top=from==='you'?(kind==='ツッツキ'?clamp(-.26-backSwipe*.50,-.80,-.24):kind==='スマッシュ'?clamp(.12+forward*.16,.12,.30):kind==='ドライブ'?clamp(.20+forward*.30,.20,.53):clamp(motion.top*.35,-.10,.15)):(kind==='カット'?rand(-.94,-.66):kind==='ツッツキ'?rand(-.75,-.52):kind==='スマッシュ'?rand(.12,.29):rand(.40,.66));
+ let top=from==='you'?(kind==='カット'?clamp(-.28-backSwipe*.43,-.72,-.25):kind==='スマッシュ'?clamp(.13+forward*.14,.13,.30):kind==='ドライブ'?clamp(.20+forward*.27,.20,.50):clamp(motion.top*.30,-.10,.13)):(kind==='カット'?rand(-.88,-.55):kind==='スマッシュ'?rand(.12,.27):rand(.35,.58));
  const side=from==='you'?(flick?clamp(flick.side*.78+motion.side*.10,-.80,.80):clamp(motion.side,-.50,.50)):rand(-.23,.23);
- const strength=from==='you'?(flick?flick.power:motion.power):(kind==='ツッツキ'?.25:.65);
+ const strength=from==='you'?(flick?flick.power:motion.power):(kind==='カット'?.22:.65);
  const fromZ=from==='you'?playerZ:aiZ;
  if(from==='cpu')aiAngle=top*28;
- let landing,toZ;
+ const chance=from==='you'
+   ? (kind==='ブロック' && forward<.11 && strength<.24) || (kind==='カット' && backSwipe<.36 && strength<.18)
+   : kind==='カット' && Math.random()<.29;
+ let landing,toZ,bounceZ,missedBy=null,outReason='';
  if(from==='you'){
-  landing=flick?clamp(flick.side*.78-aiX*.12+rand(-.045,.045),-1.09,1.09):clamp(-aiX*.35+side*.25+rand(-.065,.065),-.88,.88);
-  if(kind==='ツッツキ')toZ=-rand(.80,1.14); // ネットを越えて短く落ちる
-  else if(kind==='スマッシュ')toZ=-clamp(1.30+forward*.37+Math.max(0,playerZ-1.15)*.095+rand(-.06,.08),1.1,1.9);
-  else if(kind==='ドライブ')toZ=-clamp(1.20+forward*.27+Math.max(0,playerZ-1.15)*.095+rand(-.045,.065),1.08,1.79);
-  else toZ=-rand(1.08,1.49);
+  landing=flick?clamp(flick.side*.78-aiX*.12+rand(-.045,.045),-1.10,1.10):clamp(-aiX*.35+side*.25+(handShot==='fore'?.035:-.035)*(playerHand==='right'?1:-1)+rand(-.055,.055),-.88,.88);
+  const depth=kind==='カット'?rand(.40,.72):kind==='ブロック'?rand(.54,.87):
+   .66+forward*.38+(kind==='スマッシュ'?.12:.06)+(handShot==='fore'?.02:0)+rand(-.045,.060);
+  bounceZ=-depth;
+  if(bounceZ<-1.18){
+    missedBy='you';
+    outReason=kind==='スマッシュ'?'スマッシュを強く振りすぎ、台の奥端を越えた':
+      'ドライブの飛距離が長くなり、台の奥端を越えた';
+  }
+  toZ=missedBy?-rand(1.95,2.48):kind==='カット'?-rand(.90,1.20):kind==='スマッシュ'?-rand(1.42,1.85):kind==='ドライブ'?-rand(1.22,1.75):-rand(1.08,1.46);
  }else{
   let sideAim=Math.random()<.5?-1:1;
   if(Math.random()<.65)sideAim=playerX>.18?-1:playerX<-.18?1:sideAim;
   const spread=difficulty==='easy'?.28:difficulty==='normal'?.40:.50;
   landing=clamp(playerX*.54+sideAim*rand(.08,spread)+rand(-.035,.035),-.88,.88);
   const r=Math.random();
-  // ときどきネット際へ短く、ある時は後陣へ深く。毎回同じ長さにしない。
-  const depth=kind==='カット'?(r<.18?rand(.86,1.10):r<.74?rand(1.15,1.56):rand(1.6,2.0)):
-    kind==='ツッツキ'?(r<.64?rand(.76,1.10):r<.91?rand(1.14,1.48):rand(1.50,1.95)):
-    kind==='スマッシュ'?(r<.08?rand(1.0,1.2):r<.76?rand(1.25,1.7):rand(1.72,2.2)):
-    (r<.15?rand(.86,1.12):r<.72?rand(1.16,1.65):rand(1.71,2.31));
+  const depth=kind==='カット'?(r<.20?rand(.85,1.10):r<.76?rand(1.13,1.57):rand(1.60,2.02)):
+    kind==='スマッシュ'?(r<.10?rand(1.07,1.25):r<.78?rand(1.3,1.75):rand(1.78,2.20)):
+    (r<.16?rand(.87,1.12):r<.75?rand(1.16,1.63):rand(1.68,2.27));
   toZ=depth;
+  bounceZ=chance?rand(.44,.68):kind==='カット'?rand(.51,.91):rand(.59,1.04);
+  const missBase=difficulty==='easy'?.055:difficulty==='normal'?.038:.023;
+  const attackRisk=kind==='スマッシュ'?.048:kind==='ドライブ'?.015:.005;
+  const cpuOver=Math.random()<missBase+attackRisk+Math.min(.025,Math.max(0,rally-5)*.002);
+  if(cpuOver){missedBy='cpu';bounceZ=rand(1.44,1.64);toZ=rand(2.07,2.48);
+    outReason=kind==='スマッシュ'?'CPUのスマッシュが強すぎて奥へオーバー':
+      'CPUの'+kind+'が長くなり、台の奥端を越えた';}
  }
- // ほどよいミスの混入：長いラリーになる可能性を残しつつ、いつでもミスが起こり得る。
- // CPUの難易度/戦型、プレイヤーの強打・ラリー数で上限を調整する。
- let out=false;
- if(from==='cpu'){
-  const missBase=difficulty==='easy'?.062:difficulty==='normal'?.044:.026;
-  const attackRisk=kind==='スマッシュ'?.065:kind==='ドライブ'?.020:kind==='カット'?.005:0;
-  out=Math.random()<missBase+attackRisk+Math.min(0.035,Math.max(0,rally-5)*.003);
- }else{
-  // 速く振った打球ほどオーバーしやすい。ツッツキは安定する。
-  const hitRisk=kind==='スマッシュ'?.075+forward*.08:kind==='ドライブ'?.016+forward*.105:kind==='ツッツキ'?.016:.021;
-  out=Math.random()<hitRisk;
- }
- const missedBy=out?from:null;
- if(out){
-  // 明確なエンドオーバーにする：台の奥端を越えてから落ちる。
-  toZ=from==='you'?-rand(1.88,2.42):rand(1.90,2.48);
+ // weak contact yields a floating arc and slower ball, which the opponent can attack.
+ if(chance && !missedBy){
+   if(from==='you')toZ=-rand(1.13,1.40);
+   else toZ=rand(1.16,1.48);
  }
  const travel=Math.abs(toZ-fromZ);
- // カットマンは余裕のあるスピードと高い弧、ドライブマンは攻撃テンポ。
- const basic=from==='you'?(kind==='ツッツキ'?.91:kind==='スマッシュ'?.54:kind==='ドライブ'?.66:.76):
-   settings.returnDur*(kind==='カット'?1.49:kind==='ツッツキ'?1.25:kind==='スマッシュ'?.58:.74);
- const paceVariation=from==='cpu'?rand(.93,1.09):1;
- const normalDur=Math.max(kind==='スマッシュ'?.38:.49,basic*paceVariation+Math.max(0,travel-2.0)*.085-Math.min(rally,16)*.001);
- const dur=from==='you'?Math.max(kind==='スマッシュ'?.34:.41,normalDur/(1+forward*(kind==='スマッシュ'?.58:.52))):Math.max(kind==='スマッシュ'?.38:.52,normalDur);
- const speedRatio=from==='you'?normalDur/dur:1;
- const bounceAt=out?(from==='you'?-1.13:1.13):(from==='you'?-.47:.47);
- const bounceT=clamp((bounceAt-fromZ)/(toZ-fromZ),.35,.90);
- const arcHeight=kind==='カット'?.245:kind==='ツッツキ'?.12:kind==='スマッシュ'?.039:kind==='ドライブ'?.060:.085;
- const reboundHeight=kind==='カット'?.245:kind==='ツッツキ'?.17:kind==='スマッシュ'?.042:kind==='ドライブ'?.062:.105;
- shot={from,to,startX,landing,t:0,dur,top,side,spinValue:top,kind,missedBy,curve:side*.10,bounceT,bounced:false,fromZ,toZ,forwardBoost:forward,speedRatio,arcHeight,reboundHeight};
+ const basic=from==='you'?(kind==='カット'?.89:kind==='スマッシュ'?.53:kind==='ドライブ'?.65:.75):
+   settings.returnDur*(kind==='カット'?1.40:kind==='スマッシュ'?.62:.77);
+ const normalDur=Math.max(kind==='スマッシュ'?.37:.47,basic*(from==='cpu'?rand(.94,1.08):1)+Math.max(0,travel-2)*.065);
+ const dur=from==='you'?Math.max(kind==='スマッシュ'?.34:.42,normalDur/(1+forward*.48)*(handShot==='fore'?.96:1.025)):
+   Math.max(kind==='スマッシュ'?.37:.50,normalDur);
+ const actualDur=chance?dur*1.16:dur;
+ const speedRatio=normalDur/actualDur;
+ const bounceT=clamp((bounceZ-fromZ)/(toZ-fromZ),.31,.88);
+ // Usual shots stay low. Only clearly weak contact produces the high chance-ball arc.
+ const arcHeight=chance?.205:kind==='カット'?.108:kind==='スマッシュ'?.022:kind==='ドライブ'?.039:.053;
+ const isMidCourt=playerZ>1.25&&playerZ<2.43;
+ const midReboundBoost=isMidCourt?1.30:1;
+ const reboundHeight=(chance?.215:kind==='カット'?.137:kind==='スマッシュ'?.040:kind==='ドライブ'?.055:.077)*midReboundBoost;
+ shot={from,to,startX,landing,t:0,dur:actualDur,top,side,spinValue:top,kind,missedBy,outReason,curve:side*.10,bounceT,bounceZ,bounced:false,fromZ,toZ,forwardBoost:forward,speedRatio,arcHeight,reboundHeight,midRebound:isMidCourt,handShot,trailRGB:shotTrailRGB(kind),chance};
  if(from==='you')flickVector=null;
- hideBanner();gameState='rally';rally++;totalHits++;scoreText();
- lastShotKind=kind;
- if(kind==='スマッシュ'||kind==='ドライブ'){
-   powerHitSound(kind,kind==='スマッシュ'?1.2:from==='you'?(.80+forward*.4):.95);
- }else{
-   woodKnock('racket',kind==='カット'?.68:kind==='ツッツキ'?.73:.9);
- }
+ hideBanner();gameState='rally';rally++;totalHits++;scoreText();lastShotKind=kind;
+ if(kind==='スマッシュ'||kind==='ドライブ')powerHitSound(kind,kind==='スマッシュ'?1.2:from==='you'?.8+forward*.4:.95);
+ else woodKnock('racket',kind==='カット'?.68:.9);
  if(from==='you'&&forward>.52)makeBurst(ball,kind==='スマッシュ'?'#ff8c30':'#f2a12d',kind==='スマッシュ'?22:9);
  if(from==='you'){
-  updateSpinReadout(top,side,speedRatio,kind);spinReadout=1.25;
-  hint.textContent=kind==='ツッツキ'?'🛡 ツッツキ！ 短い下回転で相手を揺さぶる':kind==='スマッシュ'?'💥 スマッシュ！ 強い一撃！':kind==='ドライブ'?'⚡ ドライブ！ 低く速い上回転で攻める':'ブロック！ 次はフリックでコースを狙おう';
+   strokeSide=handShot;updateSpinReadout(top,side,speedRatio,kind);
+   $('spinLabel').textContent=(handShot==='fore'?'フォア ':'バック ')+$('spinLabel').textContent;
+   spinReadout=1.25;
+   hint.textContent=missedBy?'強打が長い！ 台の奥端を越えてしまう！':chance?'⚠ 弱い返球が浮いた！ 相手のチャンスボール！':
+     kind==='カット'?'🛡 カット！ 下回転でコースを変える':kind==='スマッシュ'?'💥 スマッシュ！':kind==='ドライブ'?'⚡ ドライブ！ 低い弾道で攻める':'ブロック！ 次はフリックで強く打とう';
  }else{
-  hint.textContent=kind==='カット'?'CPUのカット！ 高く浮く下回転を見極めよう':kind==='ツッツキ'?'CPUのツッツキ！ 前へ出て返そう':kind==='スマッシュ'?'CPUのスマッシュ！ 素早く合わせよう':toZ>1.63?'CPUの深いドライブ！ 後ろへ下がろう':'CPUのドライブ！ 着地点に合わせよう';
+   hint.textContent=missedBy?'CPUの打球が長い！ オーバーになる！':chance?'⚠ チャンスボール！ 前へ振ってスマッシュを狙おう！':
+     kind==='カット'?'CPUのカット！ 下回転に注意':kind==='スマッシュ'?'CPUのスマッシュ！ 素早く合わせよう':toZ>1.63?'CPUの深いドライブ！ 後ろへ下がろう':'CPUのドライブ！ 着地点に合わせよう';
  }
 }
+
 function ballPos(s){
  if(!s)return ball;
  const t=clamp(s.t,0,1),b=s.bounceT,u=t/b;
@@ -315,7 +340,7 @@ function ballPos(s){
  }else{
    const v=(t-b)/(1-b);
    // エンドオーバーは台で跳ねない。着地後も台外へ進み、少し沈む。
-   y=s.missedBy?-.14*v:.18*v+s.reboundHeight*Math.sin(Math.PI*v);
+   y=s.missedBy?-.10*v:.18*v+s.reboundHeight*Math.sin(Math.PI*v);
  }
  return{x,z,y};
 }
@@ -325,12 +350,12 @@ function loseBall(who,reason){
  vx:clamp((shot?.side||0)*1.0+(ball.x>0?.18:-.18),-.95,.95),
  vz:who==='you'?-1.45:1.65,who,reason};
  shot=null;gameState='chase';
- hint.textContent='カメラが飛んでいくボールを追尾中…';
+ hint.textContent=reason;
 }
 function finishShot(){
  if(!shot)return;
  const s=shot;ball={x:s.landing,z:s.toZ,y:.18};
- if(s.missedBy){loseBall(s.missedBy==='you'?'cpu':'you','エンドオーバー！');return}
+ if(s.missedBy){loseBall(s.missedBy==='you'?'cpu':'you',s.outReason||'台の奥端を越えてオーバー');return}
  if(Math.abs(s.landing)>1.16){loseBall(s.from==='you'?'cpu':'you','サイドアウト！');return}
  if(s.to==='you'){
    const lateral=Math.abs(playerX-s.landing),distance=Math.abs(playerZ-s.toZ);
@@ -340,15 +365,30 @@ function finishShot(){
    const depthReach=difficulty==='easy'?1.58:difficulty==='normal'?1.42:1.28;
    if(lateral>reach||distance>depthReach){loseBall('cpu',distance>depthReach?'前後の位置を合わせよう！':'左右の位置が合わなかった！');return}
    // 球がラケット周辺なら、見た目の衝突位置も少し近づけて自然に返球する。
-   makeBurst(ball,'#10b7a4',12);launch('you',s.landing);
+   const sideHit=chooseStrokeSide(s.landing);makeBurst(ball,sideHit==='fore'?'#238cff':'#43a8ce',12);launch('you',s.landing,'drive',sideHit);
  }else{
    const lateral=Math.abs(aiX-s.landing),distance=Math.abs(aiZ-s.toZ);
    if(lateral>settings.reach+.26||distance>1.10){loseBall('you','深いショットが決まった！');return}
    makeBurst(ball,'#fa6a65',10);launch('cpu',s.landing,cpuStyle);
  }
 }
-function award(who,reason){points[who]++;if(rally-1>best){best=rally-1;try{localStorage.setItem('rally11_best',String(best))}catch{}}sound(who==='you'?880:170,.22,who==='you'?'triangle':'sawtooth',.11);makeBurst(ball,who==='you'?'#40efc9':'#ff8672',26);let gameWon=(points[who]>=11 && points[who]-points[who==='you'?'cpu':'you']>=2);if(gameWon){sets[who]++;if(sets[who]===2){scoreText();showMenu('',true);return}pointMessage=who==='you'?'GAME POINT!':'CPU GAME!';pointSub=`第${gameIndex}ゲーム終了 / ${points.you} - ${points.cpu}`;gameIndex++;points={you:0,cpu:0}}else{pointMessage=who==='you'?'POINT!':'CPU POINT';pointSub=reason}
-gameState='point';pointTime=0;showBanner(pointMessage,pointSub);scoreText();hint.textContent='次のサーブを準備中…'}
+function award(who,reason){
+ points[who]++;
+ if(rally-1>best){best=rally-1;try{localStorage.setItem('rally11_best',String(best))}catch{}}
+ sound(who==='you'?880:170,.22,who==='you'?'triangle':'sawtooth',.11);
+ makeBurst(ball,who==='you'?'#40efc9':'#ff8672',26);
+ const gameWon=points[who]>=11 && points[who]-points[who==='you'?'cpu':'you']>=2;
+ if(gameWon){sets[who]++;if(sets[who]===2){scoreText();showMenu('',true);return}
+   pointMessage=who==='you'?'GAME POINT!':'CPU GAME!';pointSub=`第${gameIndex}ゲーム終了 / ${points.you} - ${points.cpu}`;
+   gameIndex++;points={you:0,cpu:0};}
+ else{
+   const isOver=reason.includes('奥端')||reason.includes('オーバー');
+   pointMessage=isOver?(who==='you'?'CPU OVER!':'OVER!'):(who==='you'?'POINT!':'CPU POINT');
+   pointSub=reason;
+ }
+ gameState='point';pointTime=0;showBanner(pointMessage,pointSub);scoreText();hint.textContent=reason;
+}
+
 function movePaddle(dt){
  const oldX=playerX,oldY=playerY;
  if(keyDir!==0)targetPlayerX=clamp(targetPlayerX+keyDir*dt*1.8,-.99,.99);
@@ -403,22 +443,23 @@ function simulate(dt){
  if(gameState==='point'){pointTime+=dt;if(pointTime>1.05)setupServe()}
  if(gameState==='rally'&&shot){
    shot.t+=dt/shot.dur;ball=ballPos(shot);
-   if(!shot.bounced&&shot.t>=shot.bounceT){shot.bounced=true;if(!shot.missedBy){bounceCue={x:ball.x,z:ball.z,life:.52,max:.52};makeBurst(ball,shot.top>=0?'#03bca8':'#f6a149',9);woodKnock('bounce',.63)}else{hint.textContent='オーバー！ ボールが台の奥へ飛び出した！';}}
+   if(!shot.bounced&&shot.t>=shot.bounceT){shot.bounced=true;if(!shot.missedBy){bounceCue={x:ball.x,z:ball.z,life:.52,max:.52,mid:shot.midRebound};makeBurst(ball,shot.top>=0?'#03bca8':'#f6a149',9);woodKnock('bounce',.63)}else{missCue={x:ball.x,z:ball.z,life:1.55,max:1.55};hint.textContent=shot.outReason+'（赤い×が着地点）';}}
    if(shot.to==='cpu'){
      const predict=clamp(shot.landing+Math.sin(shot.t*7.1)*settings.accuracy*.18+shot.curve*.18,-.97,.97);
      if(shot.t>.07){const trueGuess=clamp(predict+Math.sin((rally+1)*17.5)*settings.accuracy*.5,-.98,.98);aiX+=clamp(trueGuess-aiX,-settings.cpuSpeed*dt,settings.cpuSpeed*dt);aiZ+=clamp(shot.toZ-aiZ,-settings.cpuSpeed*dt*1.4,settings.cpuSpeed*dt*1.4)}
    }
-   if(shot.t>=1)finishShot();else{trail.unshift({x:ball.x,z:ball.z,y:ball.y,life:.22});if(trail.length>20)trail.pop()}
+   if(shot.t>=1)finishShot();else{trail.unshift({x:ball.x,z:ball.z,y:ball.y,life:.30,rgb:shot?.trailRGB||'100,125,146'});if(trail.length>26)trail.pop()}
  }
  if(gameState==='chase'&&flyaway){
    const f=flyaway;f.t=Math.min(1,f.t+dt/f.dur);
    const t=f.t;
    ball={x:f.x+f.vx*t,z:f.z+f.vz*t,y:Math.max(.03,f.y+.48*t-.51*t*t)};
-   trail.unshift({x:ball.x,z:ball.z,y:ball.y,life:.22});if(trail.length>20)trail.pop();
+   trail.unshift({x:ball.x,z:ball.z,y:ball.y,life:.30,rgb:shot?.trailRGB||'100,125,146'});if(trail.length>26)trail.pop();
    if(t>=1){flyaway=null;award(f.who,f.reason)}
  }
  if(spinReadout>0)spinReadout-=dt;
  if(bounceCue){bounceCue.life-=dt;if(bounceCue.life<=0)bounceCue=null;}
+ if(missCue){missCue.life-=dt;if(missCue.life<=0)missCue=null;}
  updateCamera(dt);
  for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0);
  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=18*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);
@@ -486,7 +527,7 @@ function drawPaddle(x,from){const near=from==='you',z=near?playerZ:aiZ,p=project
    ctx.beginPath();ctx.ellipse(0,-ry*.15,r*1.95,ry*1.55,0,0,TAU);
    ctx.fillStyle='rgba(2,162,189,.065)';ctx.fill();ctx.strokeStyle='rgba(0,139,177,.28)';ctx.lineWidth=1.3;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
  }
- ctx.rotate((near?clamp(strokeY*11+strokeX*5,-30,30):aiAngle)*Math.PI/180*.95);
+ ctx.rotate((near?clamp(strokeY*8+strokeX*4+(playerHand==='left'?-1:1)*(strokeSide==='fore'?11:-13),-35,35):aiAngle)*Math.PI/180*.95);
  ctx.shadowColor='#264f7070';ctx.shadowBlur=13;ctx.shadowOffsetY=9;
  roundRect(-r*.21,ry*.42,r*.42,ry*.99,4,near?'#c49c7c':'#be8f67');ctx.shadowBlur=0;ctx.shadowOffsetY=0;
  ctx.beginPath();ctx.ellipse(0,-ry*.3,r,ry,0,0,TAU);ctx.fillStyle='#081e2b';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=near?'#087dbe':'#f86865';ctx.stroke();
@@ -501,17 +542,51 @@ function drawBall(){
  // 落下位置と空中のボールを結ぶ細いガイド。低い視点でも高さを把握しやすい。
  if(shot && ball.y>.045){ctx.save();ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(8,86,133,.30)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(p.x,p.y+r*.6);ctx.lineTo(shadow.x,shadow.y);ctx.stroke();ctx.restore();}
  const sv=shot?shot.top:(flyaway?clamp(strokeY*.31,-1,1):0);
- const rush=shot?.from==='you'?(shot.forwardBoost||0):0;
- for(let i=trail.length-1;i>=0;i--){const t=trail[i],c=project(t.x,t.z,t.y),k=clamp(t.life/.22,0,1);ctx.beginPath();ctx.arc(c.x,c.y,Math.max(1,r*k*.86),0,TAU);ctx.fillStyle=rush>.45?`rgba(245,148,24,${(.28+.27*rush)*k})`:sv>=0?`rgba(5,157,200,${.30*k})`:`rgba(246,115,62,${.30*k})`;ctx.fill()}
- if(shot && trail.length>3){const back=project(trail[Math.min(7,trail.length-1)].x,trail[Math.min(7,trail.length-1)].z,trail[Math.min(7,trail.length-1)].y);ctx.save();ctx.strokeStyle=shot.from==='you'?'rgba(250,159,31,.52)':'rgba(20,138,188,.50)';ctx.lineCap='round';ctx.lineWidth=Math.max(2,r*.35);ctx.beginPath();ctx.moveTo(back.x,back.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();}
+ const currentRGB=shot?.trailRGB||trail[0]?.rgb||'96,122,145';
+ // 青：ドライブ・スマッシュ / 赤：カット / 灰：ブロック
+ // 過去のボール軌跡は打球ごとの色を保持する。
+ for(let i=trail.length-1;i>=0;i--){
+   const t=trail[i],c=project(t.x,t.z,t.y),k=clamp(t.life/.30,0,1);
+   ctx.beginPath();ctx.arc(c.x,c.y,Math.max(1,r*k*.9),0,TAU);
+   ctx.fillStyle=`rgba(${t.rgb||currentRGB},${(.22+.39*k)*k})`;ctx.fill();
+ }
+ if(shot&&trail.length>2){
+   const recent=trail.slice(0,Math.min(trail.length,11));
+   ctx.save();ctx.strokeStyle=`rgba(${currentRGB},.82)`;
+   ctx.shadowColor=`rgba(${currentRGB},.38)`;ctx.shadowBlur=8;
+   ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=Math.max(2.6,r*.46);
+   ctx.beginPath();const first=project(recent[recent.length-1].x,recent[recent.length-1].z,recent[recent.length-1].y);
+   ctx.moveTo(first.x,first.y);
+   for(let i=recent.length-2;i>=0;i--){const p2=project(recent[i].x,recent[i].z,recent[i].y);ctx.lineTo(p2.x,p2.y)}
+   ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();
+ }
  const aura=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*3.8);aura.addColorStop(0,'#ffe6a677');aura.addColorStop(1,'#ffe6a600');ctx.fillStyle=aura;ctx.beginPath();ctx.arc(p.x,p.y,r*3.8,0,TAU);ctx.fill();
  const g=ctx.createRadialGradient(p.x-r*.25,p.y-r*.35,0,p.x,p.y,r);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#fff7e8');g.addColorStop(1,'#ffb84c');ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fill();ctx.lineWidth=1.3;ctx.strokeStyle='#b75b2380';ctx.stroke();
  // ボール表面の回転マーク：回転方向と速度を視覚化する。
  if(Math.abs(sv)>.08){const phase=elapsed*(11+Math.abs(sv)*26)*(sv>0?1:-1);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(phase);ctx.strokeStyle=sv>=0?'#069ec8':'#ef7045';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,0,r*.68,-.85,.9);ctx.stroke();ctx.restore()}
 }
-function drawBounceCue(){if(!bounceCue)return;const q=bounceCue,k=1-q.life/q.max,p=project(q.x,q.z,0);ctx.save();ctx.globalAlpha=clamp(1-k,0,1);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.8;ctx.beginPath();ctx.ellipse(p.x,p.y,8+24*k,3+9*k,0,0,TAU);ctx.stroke();ctx.fillStyle='#8a4e06';ctx.font='bold 11px -apple-system, sans-serif';ctx.textAlign='center';ctx.fillText('BOUNCE',p.x,p.y-14-10*k);ctx.restore();}
+function drawBounceCue(){if(!bounceCue)return;const q=bounceCue,k=1-q.life/q.max,p=project(q.x,q.z,0);ctx.save();ctx.globalAlpha=clamp(1-k,0,1);ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.8;ctx.beginPath();ctx.ellipse(p.x,p.y,(q.mid?12:8)+(q.mid?31:24)*k,(q.mid?5:3)+(q.mid?12:9)*k,0,0,TAU);ctx.stroke();ctx.fillStyle='#8a4e06';ctx.font='bold 11px -apple-system, sans-serif';ctx.textAlign='center';ctx.fillText(q.mid?'MID BOUNCE':'BOUNCE',p.x,p.y-14-10*k);ctx.restore();}
+function drawMissCue(){
+ if(!missCue)return;
+ const p=project(missCue.x,missCue.z,0);
+ const alpha=clamp(missCue.life/.75,0,1);
+ ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle='#e53e4f';ctx.lineWidth=3.5;ctx.shadowColor='#f44355';ctx.shadowBlur=10;
+ ctx.beginPath();ctx.arc(p.x,p.y,15,0,TAU);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(p.x-9,p.y-9);ctx.lineTo(p.x+9,p.y+9);ctx.moveTo(p.x+9,p.y-9);ctx.lineTo(p.x-9,p.y+9);ctx.stroke();
+ ctx.shadowBlur=0;ctx.font='900 12px -apple-system, sans-serif';ctx.textAlign='center';
+ ctx.lineWidth=4;ctx.strokeStyle='#fff';ctx.strokeText('OUT! 台の奥',clamp(p.x,58,W-58),p.y-25);
+ ctx.fillStyle='#ce2942';ctx.fillText('OUT! 台の奥',clamp(p.x,58,W-58),p.y-25);ctx.restore();
+}
+function drawChanceCue(){
+ if(!shot?.chance || shot.missedBy || gameState!=='rally')return;
+ const p=project(ball.x,ball.z,ball.y),x=clamp(p.x,64,W-64),y=clamp(p.y-32,62,H-28);
+ ctx.save();ctx.font='900 11px -apple-system, sans-serif';ctx.textAlign='center';
+ ctx.fillStyle='#fff0cc';ctx.strokeStyle='#e8ab40';ctx.lineWidth=1.3;
+ ctx.beginPath();ctx.roundRect(x-57,y-15,114,24,10);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#94601a';ctx.fillText('⚡ CHANCE BALL',x,y+1);ctx.restore();
+}
 function drawReticle(){if(!shot||shot.to!=='you')return;const p=project(shot.landing,Math.min(1.72,shot.toZ),0),alpha=.36+.18*Math.sin(elapsed*9);ctx.fillStyle=`rgba(239,127,31,${alpha*.21})`;ctx.beginPath();ctx.ellipse(p.x,p.y,25,8.5,0,0,TAU);ctx.fill();ctx.strokeStyle=`rgba(230,109,31,${alpha+.26})`;ctx.lineWidth=2.6;ctx.beginPath();ctx.ellipse(p.x,p.y,23,8.5,0,0,TAU);ctx.stroke();ctx.beginPath();ctx.ellipse(p.x,p.y,7,2.8,0,0,TAU);ctx.stroke()}
-function drawScene(){ctx.clearRect(0,0,W,H);drawBackground();drawTable();drawBounceCue();drawReticle();drawPaddle(aiX,'cpu');drawPaddle(playerX,'you');drawBall();for(const p of particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,TAU);ctx.fill()}ctx.globalAlpha=1;
+function drawScene(){ctx.clearRect(0,0,W,H);drawBackground();drawTable();drawBounceCue();drawMissCue();drawReticle();drawPaddle(aiX,'cpu');drawPaddle(playerX,'you');drawBall();drawChanceCue();for(const p of particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,TAU);ctx.fill()}ctx.globalAlpha=1;
  if(gameState==='ready'&&serve==='you'){const p=project(playerX,playerZ,playerY);ctx.strokeStyle=`rgba(8,147,189,${.30+.17*Math.sin(elapsed*4)})`;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,24+4*Math.sin(elapsed*4),15+3*Math.sin(elapsed*4),0,0,TAU);ctx.stroke()}}
 function loop(now){let dt=Math.min((now-last)/1000||.016,.05);last=now;if(gameState!=='paused'&&gameState!=='menu'&&gameState!=='gameover')simulate(dt);drawScene();requestAnimationFrame(loop)}
 function setAim(evt){

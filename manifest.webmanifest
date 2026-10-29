@@ -1,7 +1,7 @@
 {
-  "name": "RALLY 11 - STYLE SHOCK 卓球",
+  "name": "RALLY 11 - CLEAR SHOTS v15",
   "short_name": "RALLY 11",
-  "description": "奥行きあるコート・後陣カメラ・カットマンの下回転・ドライブマンの強打・強打音。iPhone対応卓球ゲーム。",
+  "description": "オーバーミス理由の表示、低い弧線、カットへの統合、弱い返球からチャンスボールを再現。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
