@@ -1,8 +1,8 @@
 {
-  "name": "RALLY 11 - RALLY PRESSURE v25",
+  "name": "RALLY 11 - OPPONENT SELECT v26",
   "short_name": "RALLY 11",
-  "description": "イージー・ノーマル・ハードと、スタンダード大会・プロ大会を選べる卓球ゲーム。プロ大会では20打時点のCPU基本ミス率を10%に設定。",
-  "start_url": "./index.html?v=25",
+  "description": "CPUの難易度4段階とドライブマン・カットマンの戦型を選択できる卓球ゲーム。大会ではドライブ80%・カット20%で抽選。",
+  "start_url": "./index.html?v=26",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
